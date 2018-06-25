@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <p th:text="'总预算: ' + ${costDomain.getTotalBudget()}" />
+    <p th:text="'已用: ' + ${costDomain.getTotalSpend()}" />
+    <p th:text="'剩余: ' + ${costDomain.getTotalRemaining()}" />
+    <br>
+
+
+    <table border="1">
+        <tr>
+            <th>分类</th>
+            <th>预算</th>
+            <th>已用</th>
+            <th>剩余</th>
+        </tr>
+        <tr th:each="category : ${costDomain.getCategoryList()}">
+            <td th:text="${category.getCategory()}"/>
+            <td th:text="${category.getBudget()}"/>
+            <td th:text="${category.getSpend()}"/>
+            <td th:text="${category.getRemaining()}"/>
+        </tr>
+    </table>
+
+    <p th:text="'新增开销记录: '" />
+    <form method="POST" th:action="@{/addCost}" th:object="${record}">
+        <select th:name="select_category" th:field="*{category}">
+            <option th:each="cate : ${categories}" th:value="${cate}" th:text="${cate}"></option>
+        </select>
+        <input type="text" th:field="*{newSpend}" th:placeholder="开销"/>
+        <input type="text" th:field="*{note}" th:placeholder="备注"/>
+        <button type="submit" class="btn btn-primary btn-block" th:text="添加">Add</button>
+    </form>
+
+    <p th:text="'历史开销记录: '" />
+    <table border="1">
+        <tr>
+            <th>时间</th>
+            <th>分类</th>
+            <th>开销</th>
+            <th>备注</th>
+        </tr>
+        <tr th:each="r : ${records.getCostRecordList()}">
+            <td th:text="${#dates.format(r.getDate(), 'yyyy-MM-dd')}"/>
+            <td th:text="${r.getCategory()}"/>
+            <td th:text="${r.getNewSpend()}"/>
+            <td th:text="${r.getNote()}"/>
+        </tr>
+    </table>
+
+</body>
+</html>

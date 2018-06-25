@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+
+    <table border="1">
+        <tr>
+            <th>时间</th>
+            <th>分类</th>
+            <th>开销</th>
+            <th>备注</th>
+        </tr>
+        <tr th:each="record : ${records.getCostRecordList()}">
+            <td th:text="${#dates.format(record.getDate(), 'yyyy-MM-dd')}"/>
+            <td th:text="${record.getCategory()}"/>
+            <td th:text="${record.getNewSpend()}"/>
+            <td th:text="${record.getNote()}"/>
+        </tr>
+    </table>
+
+</body>
+</html>

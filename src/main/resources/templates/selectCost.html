@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>选择预算</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+
+    <form method="POST" th:action="@{/choose}" th:object="${costIdentity}">
+
+        <select th:name="choose_month" th:field="*{monthStr}">
+            <option th:each="mon : ${monthList}" th:value="${mon}" th:text="${mon}"></option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-block" th:text="选择">Add</button>
+    </form>
+
+</body>
+</html>

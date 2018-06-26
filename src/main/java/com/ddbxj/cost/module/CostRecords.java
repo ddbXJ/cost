@@ -1,10 +1,13 @@
 package com.ddbxj.cost.module;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author lee.li
@@ -36,6 +39,8 @@ public class CostRecords implements Serializable {
             this.note = note;
         }
 
+        private String identity = StringUtils.removeAll(UUID.randomUUID().toString(), "-");
+
         /**
          * 类目
          */
@@ -55,6 +60,14 @@ public class CostRecords implements Serializable {
          * 备注
          */
         private String note;
+
+        public String getIdentity() {
+            return identity;
+        }
+
+        public void setIdentity(String identity) {
+            this.identity = identity;
+        }
 
         public Date getDate() {
             return date;

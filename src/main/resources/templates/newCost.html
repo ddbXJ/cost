@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>新建开销预算</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+
+    <p>新建开销预算</p>
+
+    <form method="POST" th:action="@{/createCostDomain}" th:object="${request}">
+
+        <input type="text" id="monthStr" name="monthStr" th:value="${monthStr}" readonly="readonly" />
+        <input type="text" th:field="*{totalBudget}" th:placeholder="总额度"/>
+        <button type="submit" class="btn btn-primary btn-block" th:text="新建">Add</button>
+    </form>
+
+</body>
+</html>

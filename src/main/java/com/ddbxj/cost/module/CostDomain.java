@@ -157,16 +157,34 @@ public class CostDomain implements Serializable {
             this.remaining = remaining;
         }
 
-        public void addNewCost(CostRecords.CostRecord record) {
+        public void updateBudget(BigDecimal budget) {
+            this.budget = budget;
+            this.remaining = budget.subtract(spend);
+        }
+
+        private void addNewCost(CostRecords.CostRecord record) {
             spend = spend.add(record.getNewSpend());
             remaining = remaining.subtract(record.getNewSpend());
+        }
+
+        private void deleteCost(CostRecords.CostRecord record) {
+            spend = spend.subtract(record.getNewSpend());
+            remaining = remaining.add(record.getNewSpend());
         }
 
         public static CostCategory newCostCategoryFromCostRecord(CostRecords.CostRecord record) {
             return new CostDomain.CostCategory(record.getCategory(), BigDecimal.ZERO, record.getNewSpend());
         }
+
+        public static CostCategory newCostCategory(BigDecimal budget, String category) {
+            return new CostDomain.CostCategory(category, budget, BigDecimal.ZERO);
+        }
     }
 
+    /**
+     * 新增一笔消费
+     * @param record
+     */
     public void addCostRecord(CostRecords.CostRecord record) {
         Optional<CostDomain.CostCategory> optional = getCategoryList().stream().filter(x->x.category.equals(record.getCategory())).findAny();
         if (optional.isPresent()) {
@@ -178,5 +196,82 @@ public class CostDomain implements Serializable {
 
         totalSpend = totalSpend.add(record.getNewSpend());
         totalRemaining = totalRemaining.subtract(record.getNewSpend());
+    }
+
+    /**
+     * 删除一笔消费
+     * @param record
+     */
+    public void deleteCostRecord(CostRecords.CostRecord record) {
+        //分类里加回来
+        CostCategory category = getCategory(record.getCategory());
+        if (category == null) {
+            return;
+        }
+        category.deleteCost(record);
+        //总额里加回来
+        totalSpend = totalSpend.subtract(record.getNewSpend());
+        totalRemaining = totalRemaining.add(record.getNewSpend());
+    }
+
+    /**
+     * 根据分类名获取分类
+     * @param category
+     * @return
+     */
+    public CostCategory getCategory(String category) {
+        Optional<CostDomain.CostCategory> optional = getCategoryList().stream().filter(x->x.category.equals(category)).findAny();
+        return optional.orElse(null);
+    }
+
+    /**
+     * 计算分类预算总和
+     * @return
+     */
+    private BigDecimal getCategoryBudgetSum() {
+        return categoryList.stream().map(CostCategory::getBudget).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * 添加分类预算
+     * 分类预算总额度不能超过总额度
+     * @param category
+     */
+    public boolean addCostCategory(CostCategory category) {
+        if (totalBudget.subtract(getCategoryBudgetSum()).compareTo(category.budget) < 0) {
+            return false;
+        }
+        this.categoryList.add(category);
+        return true;
+    }
+
+    /**
+     * 修改分类预算
+     * 分类预算总额度不能超过总额度
+     * @param costCategory
+     */
+    public boolean updateCostCategoryBudget(CostDomain.CostCategory costCategory, BigDecimal newbudget) {
+        if (getCategoryBudgetSum().subtract(costCategory.budget).add(newbudget).compareTo(totalBudget) > 0) {
+            return false;
+        }
+        costCategory.updateBudget(newbudget);
+        return true;
+    }
+
+    /**
+     * 修改总额度
+     * @param totalBudget
+     */
+    public boolean updateTotalBudget(BigDecimal totalBudget) {
+        if (totalBudget.equals(this.totalBudget)) {
+            return true;
+        }
+        if (totalBudget.compareTo(getCategoryBudgetSum()) < 0) {
+            return false;
+        }
+
+        this.totalBudget = totalBudget;
+        this.totalRemaining = totalBudget.subtract(totalSpend);
+        return true;
     }
 }

@@ -1,12 +1,20 @@
 package com.ddbxj.cost.service;
 
+import com.alibaba.fastjson.JSONReader;
+import com.alibaba.fastjson.JSONWriter;
 import com.ddbxj.cost.module.CostDomain;
 import com.ddbxj.cost.module.CostRecords;
+import com.ddbxj.cost.module.CostDomainRequest;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.util.Optional;
+
+import static com.ddbxj.cost.module.CostDomain.CostCategory.newCostCategory;
 
 /**
  * @author lee.li
@@ -17,53 +25,119 @@ public class CostService {
 
     private static final String COST_DOMAIN_FILE_NAME = "cost_domain_";
     private static final String COST_RECORDS_FILE_NAME = "cost_records_";
-    public static final String DEFAULT_FILE_SUFFIX = "default";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM");
 
-    public CostDomain getCostDomain(String name) {
-        CostDomain domain = get(COST_DOMAIN_FILE_NAME + name, CostDomain.class);
+    public CostDomain getCostDomain(String monthStr) {
+        CostDomain domain = get(getCostDomainFileName(monthStr), CostDomain.class);
         if (domain == null) {
-            return initCostDomain();
+            return null;
         }
         return domain;
     }
 
-    public CostRecords getCostRecords(String name) {
-        CostRecords records = get(COST_RECORDS_FILE_NAME + name, CostRecords.class);
+    public CostRecords getCostRecords(String monthStr) {
+        CostRecords records = get(getCostRecordsFileName(monthStr), CostRecords.class);
         if (records == null) {
             return new CostRecords();
         }
         return records;
     }
 
-    public CostDomain initCostDomain() {
-        CostDomain domain = new CostDomain(BigDecimal.valueOf(6000), BigDecimal.valueOf(0), DateTime.now().toDate(), DateTime.now().plusMonths(1).toDate());
+    public CostDomain createCostDomain(CostDomainRequest request) {
+        DateTime dateTime = DATE_TIME_FORMATTER.parseDateTime(request.getMonthStr());
+        CostDomain costDomain = new CostDomain(request.getTotalBudget(), BigDecimal.ZERO, dateTime.toDate(), dateTime.plusMonths(1).toDate());
 
-        domain.getCategoryList().add(new CostDomain.CostCategory("点点", BigDecimal.valueOf(620), BigDecimal.ZERO));
-        domain.getCategoryList().add(new CostDomain.CostCategory("工作日伙食", BigDecimal.valueOf(840), BigDecimal.ZERO));
-        domain.getCategoryList().add(new CostDomain.CostCategory("周末伙食", BigDecimal.valueOf(1840), BigDecimal.ZERO));
-        domain.getCategoryList().add(new CostDomain.CostCategory("车/行", BigDecimal.valueOf(1000), BigDecimal.ZERO));
-        domain.getCategoryList().add(new CostDomain.CostCategory("其他", BigDecimal.valueOf(1700), BigDecimal.ZERO));
+        for (CostDomainRequest.CostCategoryRequest categoryRequest : request.getCategoryRequestList()) {
+            costDomain.getCategoryList().add(new CostDomain.CostCategory(categoryRequest.getCategory(), categoryRequest.getBudget(), BigDecimal.ZERO));
+        }
 
-        set(domain, COST_DOMAIN_FILE_NAME + DEFAULT_FILE_SUFFIX);
+        set(costDomain, getCostDomainFileName(request.getMonthStr()));
+        return costDomain;
+    }
+
+    /**
+     * 修改总额度
+     * @param totalBudget
+     * @param monthStr
+     */
+    public boolean updateTotalBudget(BigDecimal totalBudget, String monthStr) {
+        CostDomain domain = getCostDomain(monthStr);
+        if (domain == null) {
+            return false;
+        }
+        return domain.updateTotalBudget(totalBudget);
+    }
+
+    /**
+     * 修改分类额度或新增分类
+     * @param budget
+     * @param monthStr
+     * @param category
+     */
+    public boolean createOrUpdateCostCategory(String category, BigDecimal budget, String monthStr) {
+        CostDomain domain = getCostDomain(monthStr);
+        if (domain == null) {
+            return false;
+        }
+
+        CostDomain.CostCategory costCategory = domain.getCategory(category);
+        if (costCategory == null) {
+            return domain.addCostCategory(newCostCategory(budget, category));
+        } else {
+            return domain.updateCostCategoryBudget(costCategory, budget);
+        }
+
+    }
+
+    /**
+     * 删除某笔记录
+     * @param monthStr
+     * @param costIdentity
+     */
+    public void deleteCost(String monthStr, String costIdentity) {
+        CostDomain domain = getCostDomain(monthStr);
+        if (domain == null) {
+            return;
+        }
+        CostRecords records = getCostRecords(monthStr);
+        Optional<CostRecords.CostRecord> optional = records.getCostRecordList().stream().filter(x -> x.getIdentity().equals(costIdentity)).findAny();
+        if (!optional.isPresent()) {
+            return;
+        }
+
+        //删记录
+        records.getCostRecordList().remove(optional.get());
+
+        //减金额
+        domain.deleteCostRecord(optional.get());
+    }
+
+    public CostDomain addCost(CostRecords.CostRecord costRecord, String monthStr) {
+        CostRecords records = getCostRecords(monthStr);
+        records.getCostRecordList().add(costRecord);
+        set(records, getCostRecordsFileName(monthStr));
+
+        CostDomain domain = getCostDomain(monthStr);
+        domain.addCostRecord(costRecord);
+        set(domain, getCostDomainFileName(monthStr));
+
         return domain;
     }
 
-    public CostDomain addCost(CostRecords.CostRecord costRecord, String name) {
-        CostRecords records = getCostRecords(name);
-        records.getCostRecordList().add(costRecord);
-        set(records, COST_RECORDS_FILE_NAME + name);
+    private static String getCostDomainFileName(String monthStr) {
+        return COST_DOMAIN_FILE_NAME + monthStr;
+    }
 
-        CostDomain domain = getCostDomain(name);
-        domain.addCostRecord(costRecord);
-        set(domain, COST_DOMAIN_FILE_NAME + name);
-
-        return domain;
+    private static String getCostRecordsFileName(String monthStr) {
+        return COST_RECORDS_FILE_NAME + monthStr;
     }
 
     private static <T> void set(T t, String fileName) {
         try {
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(fileName)));
-            oos.writeObject(t);
+            JSONWriter jsonWriter = new JSONWriter(new FileWriter(new File(fileName)));
+            jsonWriter.writeObject(t);
+            jsonWriter.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -73,12 +147,15 @@ public class CostService {
         try {
             File f = new File(fileName);
             if(f.exists() && !f.isDirectory()) {
-                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f));
-                return clazz.cast(ois.readObject());
+                JSONReader jsonReader = new JSONReader(new FileReader(f));
+                T t = jsonReader.readObject(clazz);
+                jsonReader.close();
+                return t;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
+
 }

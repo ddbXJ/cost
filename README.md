@@ -9,7 +9,7 @@ springboot, thymeleaf
 1. mvn install
 1. java -jar cost-1.0-SNAPSHOT.jar    
     > or:   
-        1. put `cost-1.0-SNAPSHOT.jar` and `init_cost.sh` into one folder
+        1. put `cost-1.0-SNAPSHOT.jar` and `init_cost.sh` into one folder  
         2. then run `init_cost.sh`
 1. open url :
     > [cost](http://localhost:9310)

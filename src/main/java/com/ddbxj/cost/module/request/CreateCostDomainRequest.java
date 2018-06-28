@@ -1,4 +1,4 @@
-package com.ddbxj.cost.module;
+package com.ddbxj.cost.module.request;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -9,7 +9,7 @@ import java.util.List;
  * @author lee.li
  * @date 2018/06/26
  */
-public class CostDomainRequest implements Serializable {
+public class CreateCostDomainRequest implements Serializable {
 
     private static final long serialVersionUID = 3047368827628740529L;
 

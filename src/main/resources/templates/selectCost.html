@@ -6,7 +6,7 @@
 </head>
 <body>
 
-    <form method="POST" th:action="@{/choose}" th:object="${costIdentity}">
+    <form method="POST" th:action="@{/choose}" th:object="${chooseRequest}">
 
         <select th:name="choose_month" th:field="*{monthStr}">
             <option th:each="mon : ${monthList}" th:value="${mon}" th:text="${mon}"></option>

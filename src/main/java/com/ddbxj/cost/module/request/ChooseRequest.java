@@ -1,11 +1,6 @@
-package com.ddbxj.cost.module;
+package com.ddbxj.cost.module.request;
 
-/**
- * 预算标识,目前用月份
- * @author lee.li
- * @date 2018/06/26
- */
-public class CostIdentity {
+public class ChooseRequest {
     private String monthStr;
 
     public String getMonthStr() {

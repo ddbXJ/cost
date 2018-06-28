@@ -2,9 +2,9 @@ package com.ddbxj.cost.service;
 
 import com.alibaba.fastjson.JSONReader;
 import com.alibaba.fastjson.JSONWriter;
-import com.ddbxj.cost.module.CostDomain;
-import com.ddbxj.cost.module.CostRecords;
-import com.ddbxj.cost.module.CostDomainRequest;
+import com.ddbxj.cost.module.domain.CostDomain;
+import com.ddbxj.cost.module.domain.CostRecords;
+import com.ddbxj.cost.module.request.CreateCostDomainRequest;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -14,7 +14,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import static com.ddbxj.cost.module.CostDomain.CostCategory.newCostCategory;
+import static com.ddbxj.cost.module.domain.CostDomain.CostCategory.newCostCategory;
 
 /**
  * @author lee.li
@@ -43,11 +43,11 @@ public class CostService {
         return records;
     }
 
-    public CostDomain createCostDomain(CostDomainRequest request) {
+    public CostDomain createCostDomain(CreateCostDomainRequest request) {
         DateTime dateTime = DATE_TIME_FORMATTER.parseDateTime(request.getMonthStr());
         CostDomain costDomain = new CostDomain(request.getTotalBudget(), BigDecimal.ZERO, dateTime.toDate(), dateTime.plusMonths(1).toDate());
 
-        for (CostDomainRequest.CostCategoryRequest categoryRequest : request.getCategoryRequestList()) {
+        for (CreateCostDomainRequest.CostCategoryRequest categoryRequest : request.getCategoryRequestList()) {
             costDomain.getCategoryList().add(new CostDomain.CostCategory(categoryRequest.getCategory(), categoryRequest.getBudget(), BigDecimal.ZERO));
         }
 
@@ -65,7 +65,11 @@ public class CostService {
         if (domain == null) {
             return false;
         }
-        return domain.updateTotalBudget(totalBudget);
+        if (domain.updateTotalBudget(totalBudget)) {
+            set(domain, getCostDomainFileName(monthStr));
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -80,12 +84,19 @@ public class CostService {
             return false;
         }
 
+        boolean result;
+
         CostDomain.CostCategory costCategory = domain.getCategory(category);
         if (costCategory == null) {
-            return domain.addCostCategory(newCostCategory(budget, category));
+            result = domain.addCostCategory(newCostCategory(budget, category));
         } else {
-            return domain.updateCostCategoryBudget(costCategory, budget);
+            result = domain.updateCostCategoryBudget(costCategory, budget);
         }
+
+        if (result) {
+            set(domain, getCostDomainFileName(monthStr));
+        }
+        return result;
 
     }
 
@@ -107,9 +118,11 @@ public class CostService {
 
         //删记录
         records.getCostRecordList().remove(optional.get());
+        set(records, getCostRecordsFileName(monthStr));
 
         //减金额
         domain.deleteCostRecord(optional.get());
+        set(domain, getCostDomainFileName(monthStr));
     }
 
     public CostDomain addCost(CostRecords.CostRecord costRecord, String monthStr) {

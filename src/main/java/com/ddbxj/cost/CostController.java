@@ -1,9 +1,8 @@
 package com.ddbxj.cost;
 
-import com.ddbxj.cost.module.CostDomain;
-import com.ddbxj.cost.module.CostDomainRequest;
-import com.ddbxj.cost.module.CostIdentity;
-import com.ddbxj.cost.module.CostRecords;
+import com.ddbxj.cost.module.domain.CostDomain;
+import com.ddbxj.cost.module.domain.CostRecords;
+import com.ddbxj.cost.module.request.*;
 import com.ddbxj.cost.service.CostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -44,17 +43,17 @@ public class CostController {
         monthList.add("2018-08");
         monthList.add("2018-09");
         monthList.add("2018-10");
-        model.addAttribute("costIdentity", new CostIdentity());
+        model.addAttribute("chooseRequest", new ChooseRequest());
         model.addAttribute("monthList", monthList);
         return "selectCost";
     }
 
     @PostMapping("/choose")
-    public String choose(@ModelAttribute(value = "costIdentity") CostIdentity costIdentity) {
-        if (null == costService.getCostDomain(costIdentity.getMonthStr())) {
-            return "redirect:/newCost?monthStr=" + costIdentity.getMonthStr();
+    public String choose(@ModelAttribute(value = "chooseRequest") ChooseRequest chooseRequest) {
+        if (null == costService.getCostDomain(chooseRequest.getMonthStr())) {
+            return "redirect:/newCost?monthStr=" + chooseRequest.getMonthStr();
         }
-        return "redirect:/cost?monthStr=" + costIdentity.getMonthStr();
+        return "redirect:/cost?monthStr=" + chooseRequest.getMonthStr();
     }
 
     /**
@@ -63,7 +62,7 @@ public class CostController {
     @GetMapping("/newCost")
     public String newCost(@RequestParam(value = "monthStr") String monthStr, Model model) {
         model.addAttribute("monthStr", monthStr);
-        model.addAttribute("request", new CostDomainRequest());
+        model.addAttribute("request", new CreateCostDomainRequest());
         return "newCost";
     }
 
@@ -73,8 +72,11 @@ public class CostController {
         Set<String> set = domain.getCategoryList().stream().collect(Collectors.groupingBy(CostDomain.CostCategory::getCategory)).keySet();
 
         model.addAttribute("monthStr", monthStr);
+        model.addAttribute("updateTotalBudgetRequest", new UpdateTotalBudgetRequest());
+        model.addAttribute("request", new CreateOrUpdateCategoryRequest());
+        model.addAttribute("addCostRequest", new AddCostRequest());
+        model.addAttribute("deleteCostRequest", new DeleteCostRequest());
         model.addAttribute("costDomain", domain);
-        model.addAttribute("record", new CostRecords.CostRecord());
         model.addAttribute("categories", set);
         model.addAttribute("records", costService.getCostRecords(monthStr));
 
@@ -89,14 +91,13 @@ public class CostController {
 
     /**
      * 添加一笔消费记录
-     * @param record
-     * @param monthStr
+     * @param request
      * @return
      */
     @PostMapping("/addCost")
-    public String addCost(@ModelAttribute("record") CostRecords.CostRecord record, @RequestParam(value = "monthStr") String monthStr) {
-        costService.addCost(record, monthStr);
-        return "redirect:/cost";
+    public String addCost(@ModelAttribute("addCostRequest") AddCostRequest request) {
+        costService.addCost(request.getRecord(), request.getMonthStr());
+        return "redirect:/cost?monthStr=" + request.getMonthStr();
     }
 
     /**
@@ -105,46 +106,42 @@ public class CostController {
      * @return
      */
     @PostMapping("/createCostDomain")
-    public String createCostDomain(@ModelAttribute("request") CostDomainRequest request) {
+    public String createCostDomain(@ModelAttribute("request") CreateCostDomainRequest request) {
         costService.createCostDomain(request);
         return "redirect:/cost?monthStr=" + request.getMonthStr();
     }
 
     /**
      * 修改总预算
-     * @param totalBudget
-     * @param monthStr
+     * @param updateTotalBudgetRequest
      * @return
      */
     @PostMapping("/updateTotalBudget")
-    public String updateTotalBudget(@RequestParam(value = "totalBudget") BigDecimal totalBudget, @RequestParam(value = "monthStr") String monthStr) {
-        costService.updateTotalBudget(totalBudget, monthStr);
-        return "redirect:/cost?monthStr=" + monthStr;
+    public String updateTotalBudget(@ModelAttribute(value = "updateTotalBudgetRequest") UpdateTotalBudgetRequest updateTotalBudgetRequest) {
+        costService.updateTotalBudget(updateTotalBudgetRequest.getTotalBudget(), updateTotalBudgetRequest.getMonthStr());
+        return "redirect:/cost?monthStr=" + updateTotalBudgetRequest.getMonthStr();
     }
 
     /**
      * 修改分类预算或新增分类
-     * @param category
-     * @param budget
-     * @param monthStr
+     * @param request
      * @return
      */
     @PostMapping("/createOrUpdateCostCategory")
-    public String createOrUpdateCostCategory(@RequestParam(value = "category") String category, @RequestParam(value = "budget") BigDecimal budget, @RequestParam(value = "monthStr") String monthStr) {
-        costService.createOrUpdateCostCategory(category, budget, monthStr);
-        return "redirect:/cost?monthStr=" + monthStr;
+    public String createOrUpdateCostCategory(@ModelAttribute("request") CreateOrUpdateCategoryRequest request) {
+        costService.createOrUpdateCostCategory(request.getCategory(), request.getBudget(), request.getMonthStr());
+        return "redirect:/cost?monthStr=" + request.getMonthStr();
     }
 
     /**
      * 删除某笔记录
-     * @param costIdentity
-     * @param monthStr
+     * @param deleteCostRequest
      * @return
      */
     @PostMapping("/deleteCost")
-    public String deleteCost(@RequestParam(value = "costIdentity") String costIdentity, @RequestParam(value = "monthStr") String monthStr) {
-        costService.deleteCost(monthStr, costIdentity);
-        return "redirect:/cost?monthStr=" + monthStr;
+    public String deleteCost(@ModelAttribute(value = "deleteCostRequest") DeleteCostRequest deleteCostRequest) {
+        costService.deleteCost(deleteCostRequest.getMonthStr(), deleteCostRequest.getCostIdentity());
+        return "redirect:/cost?monthStr=" + deleteCostRequest.getMonthStr();
     }
 
 }

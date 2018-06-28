@@ -5,7 +5,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
-    <p th:text="'总预算: ' + ${costDomain.getTotalBudget()}" />
+    <p th:text="${monthStr} + '月总预算: ' + ${costDomain.getTotalBudget()}" />
+    <form method="POST" th:action="@{/updateTotalBudget}" th:object="${updateTotalBudgetRequest}">
+        <input type="text" id="monthStr_update_budget" name="monthStr" th:value="${monthStr}" hidden="hidden" />
+        <input type="text" th:field="*{totalBudget}" th:placeholder="总预算"/>
+        <button type="submit" class="btn btn-primary btn-block" th:text="修改总预算">Add</button>
+    </form>
+
+
     <p th:text="'已用: ' + ${costDomain.getTotalSpend()}" />
     <p th:text="'剩余: ' + ${costDomain.getTotalRemaining()}" />
     <br>
@@ -26,29 +33,52 @@
         </tr>
     </table>
 
-    <p th:text="'新增开销记录: '" />
-    <form method="POST" th:action="@{/addCost}" th:object="${record}">
-        <select th:name="select_category" th:field="*{category}">
-            <option th:each="cate : ${categories}" th:value="${cate}" th:text="${cate}"></option>
-        </select>
-        <input type="text" th:field="*{newSpend}" th:placeholder="开销"/>
-        <input type="text" th:field="*{note}" th:placeholder="备注"/>
-        <button type="submit" class="btn btn-primary btn-block" th:text="添加">Add</button>
+    <p>新建或修改分类预算: </p>
+
+    <form method="POST" th:action="@{/createOrUpdateCostCategory}" th:object="${request}">
+        <input type="text" id="monthStr1" name="monthStr" th:value="${monthStr}" hidden="hidden" />
+        <input type="text" th:field="*{category}" th:placeholder="分类"/>
+        <input type="text" th:field="*{budget}" th:placeholder="预算"/>
+        <button type="submit" class="btn btn-primary btn-block" th:text="新建或修改分类">Add</button>
     </form>
 
-    <p th:text="'历史开销记录: '" />
+    <p>新增开销记录: </p>
+    <form method="POST" th:action="@{/addCost}" th:object="${addCostRequest}">
+        <input type="text" id="monthStr2" name="monthStr" th:value="${monthStr}" hidden="hidden" />
+        <select th:name="select_category" th:field="*{record.category}">
+            <option th:each="cate : ${categories}" th:value="${cate}" th:text="${cate}"></option>
+        </select>
+        <input type="text" th:field="*{record.newSpend}" th:placeholder="开销"/>
+        <input type="text" th:field="*{record.consumer}" th:placeholder="消费者"/>
+        <input type="text" th:field="*{record.note}" th:placeholder="备注"/>
+        <button type="submit" class="btn btn-primary btn-block" th:text="添加消费记录">Add</button>
+    </form>
+
+    <p>历史开销记录:</p>
     <table border="1">
         <tr>
             <th>时间</th>
             <th>分类</th>
             <th>开销</th>
+            <th>消费者</th>
             <th>备注</th>
+            <th>删除</th>
         </tr>
         <tr th:each="r : ${records.getCostRecordList()}">
             <td th:text="${#dates.format(r.getDate(), 'yyyy-MM-dd')}"/>
             <td th:text="${r.getCategory()}"/>
             <td th:text="${r.getNewSpend()}"/>
+            <td th:text="${r.getConsumer()}"/>
             <td th:text="${r.getNote()}"/>
+
+            <td>
+                <form method="POST" th:action="@{/deleteCost}" th:object="${deleteCostRequest}">
+                    <input type="text" id="monthStr_delete" name="monthStr" th:value="${monthStr}" hidden="hidden" />
+                    <input type="text" id="costIdentity" name="costIdentity" th:value="${r.getIdentity()}" hidden="hidden" />
+                    <button type="submit" class="btn btn-primary btn-block" th:text="删除">Add</button>
+                </form>
+            </td>
+
         </tr>
     </table>
 

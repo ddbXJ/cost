@@ -1,4 +1,4 @@
-package com.ddbxj.cost.module;
+package com.ddbxj.cost.module.domain;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -30,15 +30,6 @@ public class CostRecords implements Serializable {
 
         private static final long serialVersionUID = 3047368827628740529L;
 
-        public CostRecord() {
-        }
-
-        public CostRecord(String category, BigDecimal newSpend, String note) {
-            this.category = category;
-            this.newSpend = newSpend;
-            this.note = note;
-        }
-
         private String identity = StringUtils.removeAll(UUID.randomUUID().toString(), "-");
 
         /**
@@ -60,6 +51,19 @@ public class CostRecords implements Serializable {
          * 备注
          */
         private String note;
+
+        /**
+         * 消费者
+         */
+        private String consumer;
+
+        public String getConsumer() {
+            return consumer;
+        }
+
+        public void setConsumer(String consumer) {
+            this.consumer = consumer;
+        }
 
         public String getIdentity() {
             return identity;

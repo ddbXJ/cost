@@ -3,17 +3,37 @@
 <head>
     <title>新建开销预算</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 </head>
+
+<style type="text/css">
+    body {
+        padding-top: 120px;
+    }
+</style>
+
 <body>
 
-    <p>新建开销预算</p>
+<div class="navbar navbar-expand-lg fixed-top navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="#" th:text="新建开销预算">Navbar</a>
+    </div>
+</div>
 
+<div class="container">
+    <div class="bs-component">
     <form method="POST" th:action="@{/createCostDomain}" th:object="${request}">
+        <div class="form-group">
+        <input type="text" id="monthStr" name="monthStr" th:value="${monthStr}" readonly="readonly" class="form-control"/>
+        </div>
+        <div class="form-group">
+        <input type="text" th:field="*{totalBudget}" th:placeholder="总额度" class="form-control"/>
+        </div>
 
-        <input type="text" id="monthStr" name="monthStr" th:value="${monthStr}" readonly="readonly" />
-        <input type="text" th:field="*{totalBudget}" th:placeholder="总额度"/>
-        <button type="submit" class="btn btn-primary btn-block" th:text="新建">Add</button>
+        <button type="submit" class="btn btn-primary" th:text="新建">Add</button>
     </form>
+    </div>
 
+</div>
 </body>
 </html>

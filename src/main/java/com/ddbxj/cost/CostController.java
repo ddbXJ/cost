@@ -79,6 +79,7 @@ public class CostController {
         model.addAttribute("costDomain", domain);
         model.addAttribute("categories", set);
         model.addAttribute("records", costService.getCostRecords(monthStr));
+        model.addAttribute("categoriesSum", domain.getCategoryList().stream().map(CostDomain.CostCategory::getBudget).reduce(BigDecimal.ZERO, BigDecimal::add));
 
         return "cost";
     }

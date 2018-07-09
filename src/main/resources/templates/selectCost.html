@@ -3,16 +3,43 @@
 <head>
     <title>选择预算</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 </head>
+
+<style type="text/css">
+    body {
+        padding-top: 120px;
+    }
+
+    .bs-component {
+        padding: 120px;
+    }
+
+    .choose-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
 <body>
 
+<div class="container">
+
+    <div class="bs-component">
     <form method="POST" th:action="@{/choose}" th:object="${chooseRequest}">
 
-        <select th:name="choose_month" th:field="*{monthStr}">
+        <div class="form-group">
+        <select th:name="choose_month" th:field="*{monthStr}" class="form-control">
             <option th:each="mon : ${monthList}" th:value="${mon}" th:text="${mon}"></option>
         </select>
-        <button type="submit" class="btn btn-primary btn-block" th:text="选择">Add</button>
+        </div>
+        <div class="choose-button">
+        <button type="submit" class="btn btn-primary" th:text="选择">Add</button>
+        </div>
     </form>
+    </div>
+</div>
 
 </body>
 </html>

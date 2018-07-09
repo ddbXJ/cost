@@ -31,4 +31,5 @@ hs_err_pid*
 cost_domain_*
 cost_records_*
 target/
+*/.DS_Store
 

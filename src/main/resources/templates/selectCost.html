@@ -30,8 +30,8 @@
     <form method="POST" th:action="@{/choose}" th:object="${chooseRequest}">
 
         <div class="form-group">
-        <select th:name="choose_month" th:field="*{monthStr}" class="form-control">
-            <option th:each="mon : ${monthList}" th:value="${mon}" th:text="${mon}"></option>
+        <select th:name="choose_month" th:field="*{monthStr}" class="form-control" />
+            <option th:selected="${mon eq selectedMonth}" th:each="mon : ${monthList}" th:value="${mon}" th:text="${mon}"></option>
         </select>
         </div>
         <div class="choose-button">

@@ -58,6 +58,8 @@ public class CostDomain implements Serializable {
      */
     private List<CostCategory> categoryList = new ArrayList<CostCategory>();
 
+    //region getter and setter
+
     public BigDecimal getTotalBudget() {
         return totalBudget;
     }
@@ -105,6 +107,8 @@ public class CostDomain implements Serializable {
     public void setEnd(Date end) {
         this.end = end;
     }
+
+    //endregion
 
     public static class CostCategory implements Serializable {
 
@@ -185,7 +189,7 @@ public class CostDomain implements Serializable {
      * 新增一笔消费
      * @param record
      */
-    public void addCostRecord(CostRecords.CostRecord record) {
+    private void addCostRecord(CostRecords.CostRecord record) {
         Optional<CostDomain.CostCategory> optional = getCategoryList().stream().filter(x->x.category.equals(record.getCategory())).findAny();
         if (optional.isPresent()) {
             CostDomain.CostCategory category = optional.get();
@@ -198,20 +202,16 @@ public class CostDomain implements Serializable {
         totalRemaining = totalRemaining.subtract(record.getNewSpend());
     }
 
-    /**
-     * 删除一笔消费
-     * @param record
-     */
-    public void deleteCostRecord(CostRecords.CostRecord record) {
-        //分类里加回来
-        CostCategory category = getCategory(record.getCategory());
-        if (category == null) {
-            return;
-        }
-        category.deleteCost(record);
-        //总额里加回来
-        totalSpend = totalSpend.subtract(record.getNewSpend());
-        totalRemaining = totalRemaining.add(record.getNewSpend());
+    public void fillDomainByRecords(CostRecords records) {
+        totalSpend = BigDecimal.ZERO;
+        totalRemaining = totalBudget;
+
+        getCategoryList().forEach(x -> {
+            x.spend = BigDecimal.ZERO;
+            x.remaining = x.budget;
+        });
+
+        records.getCostRecordList().forEach(this::addCostRecord);
     }
 
     /**

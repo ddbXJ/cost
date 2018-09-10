@@ -4,15 +4,21 @@ import com.ddbxj.cost.module.domain.CostDomain;
 import com.ddbxj.cost.module.domain.CostRecords;
 import com.ddbxj.cost.module.request.*;
 import com.ddbxj.cost.service.CostService;
+import org.apache.logging.log4j.util.PropertySource;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +30,13 @@ public class CostController {
 
     @Autowired
     private CostService costService;
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false);
+        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
+    }
 
     @GetMapping("/")
     public String index(Model model) {
@@ -37,14 +50,20 @@ public class CostController {
      */
     @GetMapping("/selectCost")
     public String selectCost(Model model) {
+
+        DateTimeFormatter dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM");
+
+        DateTime dateTime = DateTime.now();
+
         List<String> monthList = new ArrayList<>();
-        monthList.add("2018-06");
-        monthList.add("2018-07");
-        monthList.add("2018-08");
-        monthList.add("2018-09");
-        monthList.add("2018-10");
+
+        for (int i = -6; i <= 6 ;i ++ ) {
+            monthList.add(dateTimeFormat.print(dateTime.plusMonths(i)));
+        }
+
         model.addAttribute("chooseRequest", new ChooseRequest());
         model.addAttribute("monthList", monthList);
+        model.addAttribute("selectedMonth", dateTimeFormat.print(dateTime));
         return "selectCost";
     }
 
@@ -69,7 +88,12 @@ public class CostController {
     @GetMapping("/cost")
     public String cost(@RequestParam(value = "monthStr") String monthStr, Model model) {
         CostDomain domain = costService.getCostDomain(monthStr);
+        CostRecords records = costService.getCostRecords(monthStr);
+        domain.fillDomainByRecords(records);
         Set<String> set = domain.getCategoryList().stream().collect(Collectors.groupingBy(CostDomain.CostCategory::getCategory)).keySet();
+
+
+        records.getCostRecordList().sort(Comparator.comparing(CostRecords.CostRecord::getDate).reversed());
 
         model.addAttribute("monthStr", monthStr);
         model.addAttribute("updateTotalBudgetRequest", new UpdateTotalBudgetRequest());
@@ -78,7 +102,7 @@ public class CostController {
         model.addAttribute("deleteCostRequest", new DeleteCostRequest());
         model.addAttribute("costDomain", domain);
         model.addAttribute("categories", set);
-        model.addAttribute("records", costService.getCostRecords(monthStr));
+        model.addAttribute("records", records);
         model.addAttribute("categoriesSum", domain.getCategoryList().stream().map(CostDomain.CostCategory::getBudget).reduce(BigDecimal.ZERO, BigDecimal::add));
 
         return "cost";

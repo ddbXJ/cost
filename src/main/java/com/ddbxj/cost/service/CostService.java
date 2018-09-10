@@ -120,21 +120,21 @@ public class CostService {
         records.getCostRecordList().remove(optional.get());
         set(records, getCostRecordsFileName(monthStr));
 
-        //减金额
-        domain.deleteCostRecord(optional.get());
-        set(domain, getCostDomainFileName(monthStr));
+        ////减金额
+        //domain.deleteCostRecord(optional.get());
+        //set(domain, getCostDomainFileName(monthStr));
     }
 
-    public CostDomain addCost(CostRecords.CostRecord costRecord, String monthStr) {
+    public void addCost(CostRecords.CostRecord costRecord, String monthStr) {
         CostRecords records = getCostRecords(monthStr);
         records.getCostRecordList().add(costRecord);
         set(records, getCostRecordsFileName(monthStr));
 
-        CostDomain domain = getCostDomain(monthStr);
-        domain.addCostRecord(costRecord);
-        set(domain, getCostDomainFileName(monthStr));
+        //CostDomain domain = getCostDomain(monthStr);
+        //domain.addCostRecord(costRecord);
+        //set(domain, getCostDomainFileName(monthStr));
 
-        return domain;
+        //return domain;
     }
 
     private static String getCostDomainFileName(String monthStr) {

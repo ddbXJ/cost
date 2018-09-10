@@ -4,6 +4,8 @@
     <title>开销列表</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link id="bsdp-css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+
 </head>
 
 <style type="text/css">
@@ -169,6 +171,14 @@
                                 <div class="form-group">
                                     <input type="text" th:field="*{record.note}" th:placeholder="备注" class="form-control"/>
                                 </div>
+
+                                <div class="form-group">
+                                    <div class="input-group date" id="datepickerinput">
+                                        <input type="text" class="form-control" th:placeholder="消费日期" th:field="*{record.date}"><span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+                                    </div>
+                                </div>
+
+
                                 <button type="submit" class="btn btn-primary" th:text="添加消费记录">Add</button>
                             </form>
                         </div>
@@ -181,6 +191,15 @@
 
 </div>
 
-
 </body>
+
+<script th:src="@{/js/jquery.min.js}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>
+<script type="text/javascript">
+    $('#datepickerinput').datepicker({
+        autoclose:true,
+        format: "yyyy-mm-dd"
+    });
+</script>
+
 </html>
